@@ -13,7 +13,7 @@ public class Compra {
     private Long productoId;
     private Integer cantidad;
     private Double total;
-
+    private boolean devuelto = false;
     private LocalDateTime fecha;
 
     public Compra() {
@@ -62,5 +62,13 @@ public class Compra {
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
+    }
+
+    public boolean isDevuelto() {
+        return devuelto;
+    }
+
+    public void setDevuelto(boolean devuelto) {
+        this.devuelto = devuelto;
     }
 }

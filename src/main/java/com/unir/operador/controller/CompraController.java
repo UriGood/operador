@@ -3,6 +3,7 @@ package com.unir.operador.controller;
 import com.unir.operador.model.Compra;
 import com.unir.operador.service.CompraService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -35,5 +36,16 @@ public class CompraController {
     @GetMapping("/{id}")
     public Compra obtenerPorId(@PathVariable Long id) {
         return compraService.obtenerPorId(id);
+    }
+
+
+    @PutMapping("/{id}/devolver")
+    public ResponseEntity<Compra> devolverCompra(@PathVariable Long id) {
+        return ResponseEntity.ok(compraService.devolverCompra(id));
+    }
+
+    @GetMapping("/devueltas")
+    public List<Compra> getComprasDevueltas() {
+        return compraService.obtenerDevueltas();
     }
 }

@@ -33,34 +33,55 @@ public class CompraService {
                         return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 "No hay stock suficiente para el producto con ID " + compra.getProductoId()));
                     }
-                    // Guardamos y devolvemos como Mono
-                    return Mono.fromCallable(() -> compraRepository.save(compra)).subscribeOn(Schedulers.boundedElastic());
+
+                    // 🔹 Calcular el total automáticamente con el precio real del buscador
+                    compra.setTotal(item.getPrice() * compra.getCantidad());
+
+                    // Guardamos en la BD y devolvemos la compra
+                    return Mono.fromCallable(() -> compraRepository.save(compra))
+                            .subscribeOn(Schedulers.boundedElastic());
                 });
     }
 
-    // DTO interno para recibir respuesta del buscador
+    // DTO interno para recibir respuesta del microservicio buscador
     public static class ItemDTO {
         private Long id;
-        private String nombre;
+        private String title;   // 🔹 debe coincidir con el JSON del buscador
         private Integer stock;
+        private Double price;
 
         public Long getId() { return id; }
         public void setId(Long id) { this.id = id; }
 
-        public String getNombre() { return nombre; }
-        public void setNombre(String nombre) { this.nombre = nombre; }
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
 
         public Integer getStock() { return stock; }
         public void setStock(Integer stock) { this.stock = stock; }
+
+        public Double getPrice() { return price; }
+        public void setPrice(Double price) { this.price = price; }
     }
 
-    // Métodos no reactivos para otras operaciones
+    // Métodos no reactivos para consultas simples
     public List<Compra> obtenerTodas() {
-        return compraRepository.findAll();
+        return compraRepository.findByDevueltoFalse();
     }
 
     public Compra obtenerPorId(Long id) {
         return compraRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Compra no encontrada con ID " + id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Compra no encontrada con ID " + id));
+    }
+
+    public Compra devolverCompra(Long id) {
+        Compra compra = compraRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
+        compra.setDevuelto(true);
+        return compraRepository.save(compra);
+    }
+
+    public List<Compra> obtenerDevueltas() {
+        return compraRepository.findByDevueltoTrue();
     }
 }
