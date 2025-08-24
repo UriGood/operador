@@ -10,7 +10,7 @@ public class Compra {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long productoId;
+    private String productoId;
     private Integer cantidad;
     private Double total;
     private boolean devuelto = false;
@@ -20,7 +20,7 @@ public class Compra {
         this.fecha = LocalDateTime.now();
     }
 
-    public Compra(Long productoId, Integer cantidad, Double total) {
+    public Compra(String  productoId, Integer cantidad, Double total) {
         this.productoId = productoId;
         this.cantidad = cantidad;
         this.total = total;
@@ -32,11 +32,11 @@ public class Compra {
         return id;
     }
 
-    public Long getProductoId() {
+    public String  getProductoId() {
         return productoId;
     }
 
-    public void setProductoId(Long productoId) {
+    public void setProductoId(String  productoId) {
         this.productoId = productoId;
     }
 

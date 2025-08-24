@@ -45,13 +45,13 @@ public class CompraService {
 
     // DTO interno para recibir respuesta del microservicio buscador
     public static class ItemDTO {
-        private Long id;
+        private String id;
         private String title;   // 🔹 debe coincidir con el JSON del buscador
         private Integer stock;
         private Double price;
 
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
 
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
