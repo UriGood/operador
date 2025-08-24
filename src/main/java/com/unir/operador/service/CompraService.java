@@ -1,13 +1,12 @@
 package com.unir.operador.service;
 
+import com.unir.operador.exception.CompraNotFoundException;
+import com.unir.operador.exception.OutOfStockException;
 import com.unir.operador.model.Compra;
 import com.unir.operador.repository.CompraRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.web.client.RestTemplate;
+
 
 import java.util.List;
 
@@ -15,32 +14,34 @@ import java.util.List;
 public class CompraService {
 
     private final CompraRepository compraRepository;
-    private final WebClient.Builder webClientBuilder;
+    private final RestTemplate restTemplate;
 
-    public CompraService(CompraRepository compraRepository, WebClient.Builder webClientBuilder) {
+    public CompraService(CompraRepository compraRepository, RestTemplate restTemplate) {
         this.compraRepository = compraRepository;
-        this.webClientBuilder = webClientBuilder;
+        this.restTemplate = restTemplate;
     }
 
-    public Mono<Compra> registrarCompra(Compra compra) {
-        return webClientBuilder.build()
-                .get()
-                .uri("http://buscador/items/{id}", compra.getProductoId())
-                .retrieve()
-                .bodyToMono(ItemDTO.class)
-                .flatMap(item -> {
-                    if (item.getStock() < compra.getCantidad()) {
-                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                "No hay stock suficiente para el producto con ID " + compra.getProductoId()));
-                    }
+    public Compra registrarCompra(Compra compra) {
+        // Llamada a buscador con RestTemplate (sin WebFlux)
+        ItemDTO item = restTemplate.getForObject(
+                "http://buscador/items/{id}",
+                ItemDTO.class,
+                compra.getProductoId()
+        );
 
-                    // 🔹 Calcular el total automáticamente con el precio real del buscador
-                    compra.setTotal(item.getPrice() * compra.getCantidad());
+        if (item == null) {
+            throw new CompraNotFoundException("No existe el producto con ID " + compra.getProductoId());
+        }
 
-                    // Guardamos en la BD y devolvemos la compra
-                    return Mono.fromCallable(() -> compraRepository.save(compra))
-                            .subscribeOn(Schedulers.boundedElastic());
-                });
+        if (item.getStock() < compra.getCantidad()) {
+            throw new OutOfStockException("No hay stock suficiente para el producto con ID " + compra.getProductoId());
+        }
+
+        // Calcular total
+        compra.setTotal(item.getPrice() * compra.getCantidad());
+
+        // Guardar en la BD
+        return compraRepository.save(compra);
     }
 
     // DTO interno para recibir respuesta del microservicio buscador
@@ -70,13 +71,12 @@ public class CompraService {
 
     public Compra obtenerPorId(Long id) {
         return compraRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Compra no encontrada con ID " + id));
+                .orElseThrow(() -> new CompraNotFoundException("Compra no encontrada con ID " + id));
     }
 
     public Compra devolverCompra(Long id) {
         Compra compra = compraRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
+                .orElseThrow(() -> new CompraNotFoundException("Compra no encontrada"));
         compra.setDevuelto(true);
         return compraRepository.save(compra);
     }

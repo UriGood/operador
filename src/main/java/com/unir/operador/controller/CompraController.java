@@ -5,7 +5,6 @@ import com.unir.operador.service.CompraService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class CompraController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Compra registrarCompra(@RequestBody Compra compra) {
-        return compraService.registrarCompra(compra).block();
+        return compraService.registrarCompra(compra);
     }
 
     // Obtener todas las compras
