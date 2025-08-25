@@ -1,14 +1,14 @@
 server:
-  port: 8082
+  port: ${PORT:8082}
 
 spring:
   application:
     name: operador
   datasource:
-    url: jdbc:mysql://mysql-operador:3306/operadordb
+    url: ${SPRING_DATASOURCE_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: operador
-    password: operador
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,7 +21,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: https://eureka-server-58gd.onrender.com/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
